@@ -34,6 +34,7 @@ users_db: dict[str, User] = {}
 class AuthService:
     GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+    STUDENT_DOMAIN = "student.tce.edu"
 
     def __init__(self):
         self.client_id = settings.GOOGLE_CLIENT_ID
@@ -123,8 +124,10 @@ class AuthService:
     def get_or_create_user(self, user_info: dict) -> User:
         """Get existing user or create new one"""
         email = user_info.get("email")
+        is_member = self.is_student_member(email)
 
         if email in users_db:
+            users_db[email].is_premium = is_member
             logger.info(f"Existing user logged in: {email}")
             return users_db[email]
 
@@ -133,12 +136,17 @@ class AuthService:
             email=email,
             name=user_info.get("name", "User"),
             picture=user_info.get("picture"),
-            is_premium=False,  # Default to free tier
+            is_premium=is_member,
             created_at=datetime.utcnow()
         )
         users_db[email] = user
         logger.info(f"New user created: {email}")
         return user
+
+    def is_student_member(self, email: Optional[str]) -> bool:
+        if not email:
+            return False
+        return email.lower().endswith(f"@{self.STUDENT_DOMAIN}")
 
     def get_user(self, email: str) -> Optional[User]:
         """Get user by email"""

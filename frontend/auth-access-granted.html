@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Granted - Airbot</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            max-width: 460px;
+        }
+        .granted-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .granted-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+        }
+        .auth-card h1 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        .auth-card p {
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            background: var(--gradient-1);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="granted-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </div>
+            <h1>Access Granted</h1>
+            <p>You are authorized to use the Test Case Generator.</p>
+            <a class="action-btn" href="index.html">Go to Airbot</a>
+        </div>
+    </div>
+</body>
+</html>

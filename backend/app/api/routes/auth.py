@@ -64,10 +64,11 @@ async def require_premium(
 ) -> TokenData:
     """Dependency that requires premium user"""
     user = auth_service.get_user(token_data.email)
-    if not user or not user.is_premium:
+    has_member_access = user.is_premium if user else auth_service.is_student_member(token_data.email)
+    if not has_member_access:
         raise HTTPException(
             status_code=403,
-            detail="Premium subscription required"
+            detail="Only @student.tce.edu Google accounts can access this feature"
         )
     return token_data
 
@@ -121,7 +122,12 @@ async def get_me(token_data: TokenData = Depends(require_auth)):
     """Get current user info"""
     user = auth_service.get_user(token_data.email)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return UserResponse(
+            email=token_data.email,
+            name=token_data.name or token_data.email,
+            picture=token_data.picture,
+            is_premium=auth_service.is_student_member(token_data.email)
+        )
 
     return UserResponse(
         email=user.email,
