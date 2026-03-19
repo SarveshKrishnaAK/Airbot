@@ -132,7 +132,7 @@ function switchMode(mode) {
 
     if (mode === 'test_case' && hasTestCaseAccess() && !sessionStorage.getItem(ACCESS_GRANTED_SEEN_KEY)) {
         sessionStorage.setItem(ACCESS_GRANTED_SEEN_KEY, '1');
-        window.location.href = 'auth-access-granted.html?next=index.html%3Fmode%3Dtest_case';
+        window.location.href = 'auth-access-granted.html?next=%2F%3Fmode%3Dtest_case';
         return;
     }
 
@@ -199,7 +199,9 @@ async function sendMessage() {
     if (!question || state.isLoading) return;
 
     if (state.currentMode === 'test_case' && !hasTestCaseAccess()) {
-        switchMode('general_chat');
+        redirectToAccessDenied(
+            !state.isAuthenticated ? 'login_required' : 'domain_restricted'
+        );
         return;
     }
 
@@ -228,6 +230,13 @@ async function sendMessage() {
                 mode: state.currentMode
             })
         });
+
+        if (response.status === 403 && state.currentMode === 'test_case') {
+            redirectToAccessDenied(
+                !state.isAuthenticated ? 'login_required' : 'domain_restricted'
+            );
+            return;
+        }
 
         if (!response.ok) {
             let errorMessage = `HTTP error! status: ${response.status}`;
@@ -597,7 +606,9 @@ function getAuthHeaders() {
 }
 
 function hasTestCaseAccess() {
-    return Boolean(state.isAuthenticated && state.user?.is_premium);
+    const email = (state.user?.email || '').toLowerCase();
+    const isStudentDomain = email.endsWith(STUDENT_DOMAIN);
+    return Boolean(state.isAuthenticated && state.user?.is_premium && isStudentDomain);
 }
 
 // Check authentication status on page load
