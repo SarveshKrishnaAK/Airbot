@@ -44,11 +44,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Airbot API", lifespan=lifespan)
 
-frontend_candidates = [
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend")),
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend")),
-]
-frontend_path = next((path for path in frontend_candidates if os.path.exists(path)), None)
+def resolve_frontend_path() -> str | None:
+    frontend_candidates = [
+        os.getenv("FRONTEND_DIR", ""),
+        "/app/frontend",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../frontend")),
+    ]
+    filtered_candidates = [path for path in frontend_candidates if path]
+    return next((path for path in filtered_candidates if os.path.exists(path)), None)
+
+
+frontend_path = resolve_frontend_path()
+print(f"Frontend path: {frontend_path}")
 
 # CORS configuration
 allowed_origins = [
@@ -91,20 +99,23 @@ if frontend_path:
 
 @app.get("/auth-success.html")
 def auth_success_page():
-    if frontend_path:
-        return FileResponse(os.path.join(frontend_path, "auth-success.html"))
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        return FileResponse(os.path.join(resolved_frontend_path, "auth-success.html"))
     return {"message": "Frontend not bundled"}
 
 
 @app.get("/auth-error.html")
 def auth_error_page():
-    if frontend_path:
-        return FileResponse(os.path.join(frontend_path, "auth-error.html"))
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        return FileResponse(os.path.join(resolved_frontend_path, "auth-error.html"))
     return {"message": "Frontend not bundled"}
 
 
 @app.get("/")
 def root():
-    if frontend_path:
-        return FileResponse(os.path.join(frontend_path, "index.html"))
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        return FileResponse(os.path.join(resolved_frontend_path, "index.html"))
     return {"message": "Airbot API running"}
