@@ -28,7 +28,10 @@ async def lifespan(app: FastAPI):
         documents.extend(chunks)
 
     if documents:
-        vector_store.build_index(documents)
+        try:
+            vector_store.build_index(documents)
+        except Exception as error:
+            print(f"⚠ Vector index build failed. Continuing without RAG index: {error}")
     else:
         print("⚠ No documents found in knowledge base.")
 
