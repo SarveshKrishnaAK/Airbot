@@ -21,7 +21,9 @@ const CONFIG = {
         DOWNLOAD: '/download/excel',
         AUTH_LOGIN: '/auth/login',
         AUTH_ME: '/auth/me',
-        AUTH_VERIFY: '/auth/verify'
+        AUTH_VERIFY: '/auth/verify',
+        AUTH_SETTINGS: '/auth/settings',
+        AUTH_HISTORY: '/auth/history'
     }
 };
 
@@ -75,6 +77,73 @@ async function init() {
     const initialMode = new URLSearchParams(window.location.search).get('mode');
     if (initialMode === 'test_case') {
         switchMode('test_case');
+    }
+}
+
+function clearMessagesAndResetWelcome() {
+    if (elements.messagesContainer) {
+        elements.messagesContainer.innerHTML = '';
+        elements.messagesContainer.classList.remove('active');
+    }
+    if (elements.welcomeSection) {
+        elements.welcomeSection.classList.remove('hidden');
+    }
+}
+
+async function persistPreferredMode(mode) {
+    if (!state.isAuthenticated) return;
+
+    try {
+        await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_SETTINGS}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ preferred_mode: mode })
+        });
+    } catch (error) {
+        console.error('Failed to persist preferred mode:', error);
+    }
+}
+
+async function loadUserPersonalization() {
+    if (!state.isAuthenticated) return;
+
+    try {
+        const settingsResponse = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_SETTINGS}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json();
+            if (settingsData.preferred_mode === 'test_case' && hasTestCaseAccess()) {
+                switchMode('test_case');
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user settings:', error);
+    }
+
+    try {
+        const historyResponse = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_HISTORY}?limit=40`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!historyResponse.ok) return;
+
+        const historyItems = await historyResponse.json();
+        if (!Array.isArray(historyItems) || historyItems.length === 0) return;
+
+        clearMessagesAndResetWelcome();
+        showMessagesContainer();
+
+        historyItems.forEach(item => {
+            const messageType = item.role === 'assistant' ? 'assistant' : 'user';
+            addMessage(messageType, item.message, item.mode || 'general_chat');
+        });
+    } catch (error) {
+        console.error('Failed to load user history:', error);
     }
 }
 
@@ -154,6 +223,8 @@ function switchMode(mode) {
         // Hide download button in general chat mode
         hideDownloadSection();
     }
+
+    persistPreferredMode(mode);
 }
 
 // Update Mode Indicator Position
@@ -236,6 +307,10 @@ async function sendMessage() {
                 !state.isAuthenticated ? 'login_required' : 'domain_restricted'
             );
             return;
+        }
+
+        if (response.status === 429) {
+            throw new Error('Too many requests. Please wait a few seconds and try again.');
         }
 
         if (!response.ok) {
@@ -631,6 +706,7 @@ async function checkAuthStatus() {
             state.user = user;
             state.isAuthenticated = true;
             updateUIForUser(user);
+            await loadUserPersonalization();
         } else {
             // Token invalid, clear it
             localStorage.removeItem('airbot_token');
@@ -666,6 +742,7 @@ function handleLogout() {
     sessionStorage.removeItem(ACCESS_GRANTED_SEEN_KEY);
     state.user = null;
     state.isAuthenticated = false;
+    clearMessagesAndResetWelcome();
     updateUIForGuest();
 }
 

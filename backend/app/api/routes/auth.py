@@ -7,11 +7,13 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
+from typing import Literal
 from loguru import logger
 
 from app.services.auth_service import auth_service, User, TokenData
 from app.core.config import settings
 from app.core.rate_limiter import rate_limiter, get_client_ip
+from app.db.persistence import get_user_settings, update_user_preferred_mode, get_chat_history
 
 
 router = APIRouter()
@@ -33,6 +35,21 @@ class UserResponse(BaseModel):
     name: str
     picture: Optional[str]
     is_premium: bool
+
+
+class UserSettingsResponse(BaseModel):
+    preferred_mode: Literal["general_chat", "test_case"] = "general_chat"
+
+
+class UpdateUserSettingsRequest(BaseModel):
+    preferred_mode: Literal["general_chat", "test_case"]
+
+
+class ChatHistoryItem(BaseModel):
+    role: str
+    mode: str
+    message: str
+    created_at: str
 
 
 async def get_current_user(
@@ -160,3 +177,39 @@ async def verify_token(token_data: TokenData = Depends(require_auth)):
         "email": token_data.email,
         "name": token_data.name
     }
+
+
+@router.get("/settings", response_model=UserSettingsResponse)
+async def get_settings(token_data: TokenData = Depends(require_auth)):
+    settings_data = get_user_settings(token_data.email)
+    if not settings_data:
+        return UserSettingsResponse(preferred_mode="general_chat")
+
+    preferred_mode = settings_data.get("preferred_mode") or "general_chat"
+    if preferred_mode not in {"general_chat", "test_case"}:
+        preferred_mode = "general_chat"
+
+    return UserSettingsResponse(preferred_mode=preferred_mode)
+
+
+@router.put("/settings", response_model=UserSettingsResponse)
+async def update_settings(
+    request: UpdateUserSettingsRequest,
+    token_data: TokenData = Depends(require_auth)
+):
+    preferred_mode = request.preferred_mode
+    if preferred_mode == "test_case" and not auth_service.is_student_member(token_data.email):
+        preferred_mode = "general_chat"
+
+    update_user_preferred_mode(token_data.email, preferred_mode)
+    return UserSettingsResponse(preferred_mode=preferred_mode)
+
+
+@router.get("/history", response_model=list[ChatHistoryItem])
+async def user_history(
+    limit: int = 50,
+    token_data: TokenData = Depends(require_auth)
+):
+    safe_limit = max(1, min(limit, 200))
+    history = get_chat_history(token_data.email, limit=safe_limit)
+    return [ChatHistoryItem(**item) for item in history]
