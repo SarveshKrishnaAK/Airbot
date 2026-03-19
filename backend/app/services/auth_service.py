@@ -11,6 +11,11 @@ from loguru import logger
 from pydantic import BaseModel
 
 from app.core.config import settings
+from app.db.persistence import (
+    upsert_user,
+    get_user as db_get_user,
+    set_member_status,
+)
 
 
 class TokenData(BaseModel):
@@ -25,10 +30,6 @@ class User(BaseModel):
     picture: Optional[str] = None
     is_premium: bool = False
     created_at: datetime = datetime.utcnow()
-
-
-# In-memory user store (replace with database in production)
-users_db: dict[str, User] = {}
 
 
 class AuthService:
@@ -124,24 +125,28 @@ class AuthService:
     def get_or_create_user(self, user_info: dict) -> User:
         """Get existing user or create new one"""
         email = user_info.get("email")
+        if not email:
+            raise ValueError("User email not found in OAuth response")
+
         is_member = self.is_student_member(email)
+        name = user_info.get("name", "User")
+        picture = user_info.get("picture")
 
-        if email in users_db:
-            users_db[email].is_premium = is_member
+        existing_user = db_get_user(email)
+        upsert_user(email=email, name=name, picture=picture, is_member=is_member)
+
+        if existing_user:
             logger.info(f"Existing user logged in: {email}")
-            return users_db[email]
+        else:
+            logger.info(f"New user created: {email}")
 
-        # Create new user
-        user = User(
+        return User(
             email=email,
-            name=user_info.get("name", "User"),
-            picture=user_info.get("picture"),
+            name=name,
+            picture=picture,
             is_premium=is_member,
             created_at=datetime.utcnow()
         )
-        users_db[email] = user
-        logger.info(f"New user created: {email}")
-        return user
 
     def is_student_member(self, email: Optional[str]) -> bool:
         if not email:
@@ -150,15 +155,27 @@ class AuthService:
 
     def get_user(self, email: str) -> Optional[User]:
         """Get user by email"""
-        return users_db.get(email)
+        user_data = db_get_user(email)
+        if not user_data:
+            return None
+
+        return User(
+            email=user_data["email"],
+            name=user_data["name"],
+            picture=user_data["picture"],
+            is_premium=bool(user_data["is_member"]),
+            created_at=datetime.fromisoformat(user_data["created_at"])
+        )
 
     def set_premium(self, email: str, is_premium: bool) -> bool:
         """Set user premium status"""
-        if email in users_db:
-            users_db[email].is_premium = is_premium
-            logger.info(f"User {email} premium status: {is_premium}")
-            return True
-        return False
+        user = db_get_user(email)
+        if not user:
+            return False
+
+        set_member_status(email, is_premium)
+        logger.info(f"User {email} premium status: {is_premium}")
+        return True
 
 
 auth_service = AuthService()

@@ -6,6 +6,7 @@ from app.services.llm_service import llm_service
 from app.services.rag_service import rag_service
 from app.services.auth_service import auth_service
 from app.core.rate_limiter import rate_limiter, get_client_ip
+from app.db.persistence import update_user_preferred_mode, add_chat_message
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -116,6 +117,11 @@ def chat_endpoint(
     if not rate_limiter.allow(f"chat:{client_ip}", limit=30, window_seconds=60):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please slow down and retry.")
 
+    token_data = None
+
+    if credentials is not None:
+        token_data = auth_service.verify_token(credentials.credentials)
+
     if request.mode == "test_case":
         if credentials is None:
             raise HTTPException(
@@ -123,7 +129,6 @@ def chat_endpoint(
                 detail="Member login required. Sign in with Google using a @student.tce.edu account to access Test Case Generator."
             )
 
-        token_data = auth_service.verify_token(credentials.credentials)
         if token_data is None:
             raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -145,5 +150,10 @@ def chat_endpoint(
         user_prompt=request.question,
         mode=request.mode
     )
+
+    if token_data and token_data.email:
+        update_user_preferred_mode(token_data.email, request.mode)
+        add_chat_message(token_data.email, "user", request.mode, request.question)
+        add_chat_message(token_data.email, "assistant", request.mode, answer)
 
     return ChatResponse(answer=answer)

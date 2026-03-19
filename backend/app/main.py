@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from app.api.routes import chat, aerospace, health, download, auth
 from app.db.vector_store import vector_store
+from app.db.persistence import initialize_database
 from app.utils.pdf_loader import load_documents
 from app.core.config import settings
 import os
@@ -12,6 +13,8 @@ import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    initialize_database()
+
     knowledge_base_candidates = [
         os.getenv("KNOWLEDGE_BASE_DIR", ""),
         "/app/knowledge_base",

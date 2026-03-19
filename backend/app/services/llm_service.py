@@ -34,7 +34,11 @@ class LLMService:
 
     def __init__(self):
         self.provider = settings.LLM_PROVIDER
+        self.privacy_mode = settings.PRIVACY_MODE
         logger.info(f"Initializing LLM Service with provider: {self.provider}")
+
+        if self.privacy_mode == "local_only" and self.provider != "local":
+            raise ValueError("PRIVACY_MODE=local_only requires LLM_PROVIDER=local")
 
         if self.provider == "cloud":
             self._init_groq()

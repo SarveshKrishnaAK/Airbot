@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     # LLM Provider: "cloud" for Groq, "local" for Ollama
     LLM_PROVIDER: str = "local"
+    PRIVACY_MODE: str = "standard"  # standard | local_only
 
     # Groq Configuration (Cloud LLM)
     GROQ_API_KEY: Optional[str] = None
@@ -30,6 +31,7 @@ class Settings(BaseSettings):
     # Legacy (optional)
     OPENAI_API_KEY: Optional[str] = None
     MONGO_URI: str = "mongodb://localhost:27017"
+    SQLITE_DB_PATH: str = "./airbot.db"
 
     class Config:
         env_file = ".env"
