@@ -113,6 +113,22 @@ def auth_error_page():
     return {"message": "Frontend not bundled"}
 
 
+@app.get("/auth-access-denied.html")
+def auth_access_denied_page():
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        return FileResponse(os.path.join(resolved_frontend_path, "auth-access-denied.html"))
+    return {"message": "Frontend not bundled"}
+
+
+@app.get("/auth-access-granted.html")
+def auth_access_granted_page():
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        return FileResponse(os.path.join(resolved_frontend_path, "auth-access-granted.html"))
+    return {"message": "Frontend not bundled"}
+
+
 @app.get("/")
 def root():
     resolved_frontend_path = resolve_frontend_path()

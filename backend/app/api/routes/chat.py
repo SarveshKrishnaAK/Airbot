@@ -1,10 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.models.request_models import ChatRequest
 from app.models.response_models import ChatResponse
 from app.services.llm_service import llm_service
 from app.services.rag_service import rag_service
+from app.services.auth_service import auth_service
 
 router = APIRouter()
+security = HTTPBearer(auto_error=False)
 
 
 def get_test_case_prompt(context: str) -> str:
@@ -103,7 +106,26 @@ Context:
 
 
 @router.post("/", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest):
+def chat_endpoint(
+    request: ChatRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    if request.mode == "test_case":
+        if credentials is None:
+            raise HTTPException(
+                status_code=403,
+                detail="Member login required. Sign in with Google using a @student.tce.edu account to access Test Case Generator."
+            )
+
+        token_data = auth_service.verify_token(credentials.credentials)
+        if token_data is None:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+        if not auth_service.is_student_member(token_data.email):
+            raise HTTPException(
+                status_code=403,
+                detail="Only @student.tce.edu Google accounts can access Test Case Generator."
+            )
 
     retrieved_context = rag_service.retrieve_context(request.question)
 

@@ -25,6 +25,13 @@ const CONFIG = {
     }
 };
 
+const STUDENT_DOMAIN = '@student.tce.edu';
+
+function redirectToAccessDenied(reason) {
+    const encodedReason = encodeURIComponent(reason || 'not_authorized');
+    window.location.href = `auth-access-denied.html?reason=${encodedReason}`;
+}
+
 // State Management
 const state = {
     currentMode: 'general_chat',
@@ -110,6 +117,13 @@ function setupEventListeners() {
 function switchMode(mode) {
     if (state.currentMode === mode) return;
 
+    if (mode === 'test_case' && !hasTestCaseAccess()) {
+        redirectToAccessDenied(
+            !state.isAuthenticated ? 'login_required' : 'domain_restricted'
+        );
+        return;
+    }
+
     state.currentMode = mode;
 
     // Update button states
@@ -172,6 +186,11 @@ async function sendMessage() {
     const question = elements.userInput.value.trim();
     if (!question || state.isLoading) return;
 
+    if (state.currentMode === 'test_case' && !hasTestCaseAccess()) {
+        switchMode('general_chat');
+        return;
+    }
+
     // Show messages container, hide welcome
     showMessagesContainer();
 
@@ -189,7 +208,8 @@ async function sendMessage() {
         const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.CHAT}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
             },
             body: JSON.stringify({
                 question: question,
@@ -198,7 +218,15 @@ async function sendMessage() {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData?.detail) {
+                    errorMessage = errorData.detail;
+                }
+            } catch (e) {
+            }
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -556,6 +584,10 @@ function getAuthHeaders() {
     return {};
 }
 
+function hasTestCaseAccess() {
+    return Boolean(state.isAuthenticated && state.user?.is_premium);
+}
+
 // Check authentication status on page load
 async function checkAuthStatus() {
     const token = getAuthToken();
@@ -630,6 +662,10 @@ function updateUIForUser(user) {
     if (elements.premiumIndicator) {
         elements.premiumIndicator.style.display = user.is_premium ? 'inline' : 'none';
     }
+
+    if (!user.is_premium && state.currentMode === 'test_case') {
+        switchMode('general_chat');
+    }
 }
 
 // Update UI for guest (not logged in)
@@ -639,6 +675,10 @@ function updateUIForGuest() {
     }
     if (elements.userProfile) {
         elements.userProfile.style.display = 'none';
+    }
+
+    if (state.currentMode === 'test_case') {
+        switchMode('general_chat');
     }
 }
 
