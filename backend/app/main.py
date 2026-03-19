@@ -23,6 +23,13 @@ async def lifespan(app: FastAPI):
     from app.utils.chunker import chunk_text
 
     raw_documents = load_documents(base_path)
+    print(f"Knowledge base documents loaded: {len(raw_documents)}")
+
+    if not raw_documents:
+        file_count = 0
+        for _, _, files in os.walk(base_path):
+            file_count += len(files)
+        print(f"Knowledge base files discovered: {file_count}")
 
     documents = []
     for doc in raw_documents:
