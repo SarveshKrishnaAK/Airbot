@@ -13,10 +13,13 @@ import os
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     knowledge_base_candidates = [
+        os.getenv("KNOWLEDGE_BASE_DIR", ""),
+        "/app/knowledge_base",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base")),
     ]
-    base_path = next((path for path in knowledge_base_candidates if os.path.exists(path)), knowledge_base_candidates[0])
+    filtered_candidates = [path for path in knowledge_base_candidates if path]
+    base_path = next((path for path in filtered_candidates if os.path.exists(path)), filtered_candidates[0])
     print("Knowledge base path:", base_path)
     print(f"LLM Provider: {settings.LLM_PROVIDER}")
 
