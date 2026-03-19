@@ -4,8 +4,18 @@
  */
 
 // Configuration
+const runtimeApiBaseUrl =
+    window.AIRBOT_API_BASE_URL ||
+    window.__AIRBOT_CONFIG__?.API_BASE_URL ||
+    '';
+
+const fallbackApiBaseUrl =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8000'
+        : '';
+
 const CONFIG = {
-    API_BASE_URL: 'http://localhost:8000',
+    API_BASE_URL: (runtimeApiBaseUrl || fallbackApiBaseUrl).replace(/\/$/, ''),
     ENDPOINTS: {
         CHAT: '/chat/',
         DOWNLOAD: '/download/excel',
