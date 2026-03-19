@@ -179,6 +179,12 @@ body {
     color: white;
 }
 
+.airbot-logo {
+    width: 32px;
+    height: 32px;
+    display: block;
+}
+
 .logo-text h1 {
     font-size: 1.75rem;
     font-weight: 700;
@@ -1089,6 +1095,35 @@ body {
     flex-wrap: wrap;
 }
 
+.footer-main {
+    justify-content: space-between;
+    width: 100%;
+    gap: 16px;
+}
+
+.footer-left,
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.footer-right {
+    justify-content: flex-end;
+}
+
+.footer-link {
+    color: var(--primary-accent);
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+.footer-link:hover {
+    color: #7ae7ff;
+    text-decoration: underline;
+}
+
 .separator {
     color: var(--glass-border);
 }
@@ -1232,6 +1267,14 @@ body {
     .footer-content {
         flex-direction: column;
         gap: 4px;
+    }
+
+    .footer-main,
+    .footer-left,
+    .footer-right {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
     }
 
     .separator {
