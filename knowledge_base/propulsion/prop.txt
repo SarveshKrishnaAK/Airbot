@@ -1,0 +1,104 @@
+Product Type Issue ID# Category Subject Description
+1
+Engine E-01 Fuel System Icing
+Propulsion Fuel System Icing Threats Standardization item: You may need an issue paper to establish a means of compliance with § 33.67 to address the threat to the engine from ice that may build up in the aircraft fuel system and release into the engine fuel
+inlet. This issue paper
+would require certification testing under § 33.67(b)(4)(ii) to include demonstration that ice released from the airplane system or entrained in the airplane fuel supply will not collect on the face of the fuel/oil heat exchange
+(FOHE), or any other part of the fuel system, and cause a restriction in fuel flow. Potential sources of ice include entrained ice crystals and chunks of solid ice that may be suddenly released due to factors such as changes
+in temperature, fuel flow or vibration. This is an interface issue that relates to aircraft level requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer..
+2
+Engine E-02 Icing Propulsion Inlet Probe Icing Standardization item: You may need an issue paper to establish a means of compliance with § 33.68 to address the threat from ice adversely affecting engine inlet probe signals or engine damage from probe ice buildup
+and release into the engine. The issue paper would require you to show that your engine and its components, including the inlet probes, are capable of performing their intended function in the declared flight envelope. The
+flight envelope evaluation should account for changing atmospheric conditions, such as icing, including ice crystal icing conditions. Testing the inlet probes in an ice crystal environment in accordance with Appendix D to
+part 33, Amendment 33-34 could be required. In addition, the engine control system § 33.28 system safety assessment should include consideration for inlet probe corruption from ice crystal contamination. This is an
+interface issue that relates to aircraft level requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer.
+3
+Engine E-03 Icing Propulsion Operation in Heavy Snow Icing
+Threat You may need an issue paper to establish a means of compliance with § 33.68 to address the threat to the engine when it is operated in atmospheric snow concentrations greater than 0.9 g/m3. This issue paper would
+require evaluation of the effect of operation in snow at concentrations up to the maximum you expect the engine to encounter in service, to show the engine will operate without adverse effect during taxi and takeoff. The
+results of the analysis would need to be incorporated into the installation manual for use by the airplane manufacturer in setting operational limits under 14 CFR 25.1093(b)(1). If you declare an engine operating limit for
+operating in heavy snow, that limit should be included in the § 33.5 operating manual. Such a limit, if declared, should not require specific equipment (on-board or on-airport) for the flight crew to make the determination of
+whether the limit has been exceeded.
+4
+Engine E-04 Propulsion Structures Additive Manufacturing You may need an issue paper to establish means of compliance to §33.15 when proposing use of Additive Manufacturing (AM) of engine parts. AM is a relatively new manufacturing process and describes the process of
+joining materials to make objects from three-dimensional (3D) model data using a sequential layering process. This manufacturing technique is sometimes referred to as 3D printing. AM is a generic term that spans a
+diverse range of techniques using a wide range of machines and technologies, such as Powder Bed Fusion (PBF), Directed Energy Deposition (DED), and Material Extrusion using energy sources such as lasers, electron
+beams, or thermal energy. Each of these AM process may have unique considerations.
+For AM manufacturing processes on engine components, the applicant should coordinate with the appropriate validation or certification office and AIR-625, Engine & Propulsion Section. Guidance is available in AC 33.15-
+3 if the applicant proposes to use PBF processes to manufacture engine components.
+5
+Engine E-05 Propulsion Structures Life Limited Parts You need an issue paper to establish a means of compliance with § 33.70 to address the fatigue and damage tolerance requirements of Composite life limited parts. You may need an issue paper to establish a method of
+compliance with § 33.15 when utilizing composite materials for non-life limited turbine engine parts. An important attribute of typical fiber-reinforced composites (both polymer matrix composites (PMCs) and ceramic matrix
+composites (CMCs)) is that the material is made at the same time as the component itself. As a result, the composite material properties in a finished part typically depend on both the properties of the raw materials and on
+the processing conditions used to fabricate the part. Both material and process specifications must be established in order to ensure that the composite material performs as expected. The material specifications should be
+identified and process specifications and controls established to ensure that the properties of the finished part are consistent with the design database.
+6
+Engine E-06 Propulsion Safety Impact of the
+Susceptibility to Atmospheric
+Neutrons
+You may need an issue paper to establish a means of compliance with § 33.28 when the Electronic Engine Control (EEC) system for the Model engine could be susceptible to atmospheric neutrons. Atmospheric neutrons
+could change the state of the EEC system's digital memory or other digital circuitry. Memory or logic upsets that are not detected and corrected or mitigated could result in a malfunction of the system.
+7
+Engine E-07 Propulsion Use of Model-Based
+Development (MBD) Methods
+and Tools
+You may need an issue paper to establish a means of compliance with § 33.28 if you and/or your airborne system developers propose to use Model-Based Development (MBD) methods and tools to develop software
+executing in airborne systems and equipment using DO-178B as guidance. Because DO-178B did not address the unique characteristics of MBD, there is the potential for misapplication of the existing guidance that could
+result in increased program risk and potential program delays. This IP would require you to demonstrate to the certification authorities that the appropriate software assurance has been achieved using MBD methods and
+tools.
+8
+Engine E-08 Propulsion Use of Multi-Core Processors You may need an issue paper to establish a means of compliance if you and/or your airborne system developers propose to use one or more multi-core processors (MCP) in the airborne equipment for the aircraft. The
+existing software and Airborne Electronic Hardware (AEH) guidance was developed before MCPs were used in civil aircraft, so the existing guidance material does not specifically cover the use of MCPs or the planning,
+development or verification of software hosted on MCPs. MCPs are very complex and have architectural features that can cause anomalous behavior in safety-critical aircraft functions.
+9
+Engine E-09 Propulsion Security Safety Impact of Susceptibility
+to Cyber-Attacks on Engines
+and Propellers
+You may need an issue paper to establish a means of compliance with §33.28 Electronic Engine Control (EEC) or 35.23 Propeller Control System when the Control system could be susceptible to cyber security attacks
+which could change the state of the system's digital memory or other interfacing electronic systems. Memory or logic corruption that are not detected and corrected or mitigated could result in engine power rollbacks, loss
+of throttle response or loss of data communication between the engine and aircraft systems. Engine and propeller control systems are connected to the aircraft by means of an onboard digital communication network for
+control and monitoring system signals; potentially a wireless network for off-board data communication and support equipment for loading software or data for engine or propeller control systems. Consequently, engine and
+propeller control systems, including networks, software, and data, must be designed so that they are protected from intentional unauthorized electronic interactions that may result in an adverse effect on the safety of the
+aircraft, the other engine(s), or the propeller(s). This is an interface issue that relates to aircraft level requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer.
+10
+Engine E-10 Propulsion Controls Engine Electrical Wiring
+Interconnect Systems (EWIS) You may need an issue paper to establish EWIS means of compliance if the engine is to be installed on an aircraft to be certified under Part 25. To streamline this process, the engine manufacturer needs to coordinate
+with the aircraft manufacturer early in the program to understand EWIS related design features and technical data that may be needed by the aircraft manufacturer in support of their Part 25 certification. The issue paper
+provides a mapping of Part 25 EWIS requirements to the Part 33 requirements, EWIS data needed for Part 33 certification and items that may be needed by the airframer for Part 25 certification. This is an interface issue
+that relates to aircraft level requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer.
+11
+Engine E-11 Propulsion Control System Fault
+Accommodation You may need an issue paper related to Fault Accommodation in the Electronic Engine Control or Propeller Control system for an aircraft relative to soft faults, hard faults and their combination. Detection &
+accommodation of soft signal faults and certain hard faults may have subtle shortfalls with undesirable effects on engine operation or dispatch determination. The magnitude depends on control redundancy,
+hardware/software features for I/O signal management, control laws, component variation, plant model accuracies, installation and environmental effects. The issue paper outlines Fault Types, Accommodation and
+Dispatch ramifications; recommends tests and analyses for substantiation; and exception review based on criticality of powerplant events for aircraft safety. This is an interface issue that relates to aircraft level
+requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer.
+12
+Engine E-12 Propulsion Engine Protection Systems You may need an issue paper related to engine protection system function(s), as their implementation in the Engine Control or Propeller Control system can have significant implications for aircraft controllability and safety.
+Engine protective systems when triggered can generate different levels of thrust loss and thrust asymmetry (multi-engine aircraft). The impact of this on the aircraft can be minor to catastrophic depending on the magnitude
+of the thrust/power change, the flight phase and aircraft configuration. The engine manufacturer needs to work with the aircraft manufacturer to validate Engine Control & Propeller Control Systems for engine overspeed
+protection and robustness for spurious triggers with respect to the aircraft safety, controllability and engine restarting requirements.
+13
+Engine E-13 Propulsion Controls Engine System and Component
+Tests You may need an issue paper for Engine System and Component Tests, as history of post-certification issues indicates potential gaps in the substantiation in some areas. These include combined exposure to hot or cold
+temperatures, vibration and electrical stresses; humidity, water & ice exposure, and blockage of pressure lines. Engine control component failures or anomalies cause engine issues such as inability to start/accelerate,
+surge/stall and thrust/power anomalies. These issues cause potential safety hazards in any aircraft application, and especially in single engine aircraft applications. It is necessary to review the robustness of substantiation
+for § 33.91/ARP5757 component tests, and associated 33.28 & 35.23 validation. Additional resources from MIL-STD-810H, FAA/AIA Report on Engine Probe Icing, and EASA AMC guidance on Probe Icing and MIL-
+HDBK-781A are recommended to construct robust substantiation.
+14 Engine E-14 Propulsion De-Activation of Overspeed
+Protection System You may need an issue paper to establish a means of compliance with §33.27(c) & (e) when the overspeed protection system is de-activated in an OEI condition for any reason other than common mode effects. Common
+mode threat is defined as an engine shutdown due to activation of an overspeed protection system or portion of such system after another engine has been shut down by the loss of load overspeed protection system
+activation. This is an interface issue that relates to aircraft level requirements. Engine manufacturer may need to coordinate with Aircraft Manufacturer.
+15
+Engine E-16 Structures Engine LLP Influencing Parts Standardization Item. Section 33.70 requires “an engineering plan that contains the steps required to ensure each engine life-limited part [LLP] is withdrawn from service at an approved life before hazardous engine
+effects can occur. These steps include validated analysis, test, or service experience which ensures that the combination of loads, material properties, environmental influences and operating conditions, including the
+effects of other engine parts influencing these parameters, are sufficiently well known and predictable so that the operating limitations can be established and maintained for each engine life-limited part.” Manufacturing and
+service plans are also required for LLP. Certain non-life-limited engine parts can adversely affect engine life-limited parts if not properly evaluated. These are called Influencing Parts. Such parts might directly or indirectly
+influence LLP lives, stresses, temperatures, cooling or other factors. For reference, Contact the Policy and Standards Division Technical Policy Branch if a PMA or STC applicant proposed to produce or modify an engine
+Influencing Part.
+16 Engine E-17 Propulsion Structures Lifing System Standardization Item. Section 33.70 requires “By a procedure approved by the FAA, operating limitations must be established which specify the maximum allowable number of flight cycles for each engine life-limited part.”
+The procedure in this rule is otherwise known as a “lifing system”. Approval of any new lifing system, or changes to an existing lifing system, needs to be coordinated with the Policy and Standards Division, Engine and
+Propulsion Section (AIR-625).
+17 Engine E-18 Electrical Systems Fire
+Protection Propulsion Electrical Wiring Fire Protection Certification Position Paper 33.91-1 provides a method of compliance for the engine electrical wiring fire protection (§§ 33.17a, 33.91) with respect to §33.17(a) non-spread of fire requirement using residual flame criteria.
+The engine manufacturer needs to also coordinate with the aircraft manufacturer for other installation specific electrical wiring requirements.

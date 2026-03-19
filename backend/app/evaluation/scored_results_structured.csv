@@ -1,0 +1,81 @@
+Prompt,NVIDIA_domain,NVIDIA_depth,NVIDIA_edge,NVIDIA_realism,NVIDIA_clarity,Airbot_domain,Airbot_depth,Airbot_edge,Airbot_realism,Airbot_clarity
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 6061-T6 under high RPM conditions.
+",5,4,5,4,5,4,3,4,3,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 6061-T6 under thermal cycling conditions.
+",5,4,5,4,5,4,3,4,3,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 6061-T6 under fatigue loading conditions.
+",4,4,5,5,5,5,5,4,4,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 6061-T6 under corrosion exposure conditions.
+",4,4,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 6061-T6 under machining tolerance limits conditions.
+",4,3,4,4,5,5,5,5,5,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 2024-T3 under high RPM conditions.
+",4,3,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 2024-T3 under thermal cycling conditions.
+",4,3,4,3,4,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 2024-T3 under fatigue loading conditions.
+",4,4,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 2024-T3 under corrosion exposure conditions.
+",4,4,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 2024-T3 under machining tolerance limits conditions.
+",4,3,4,4,5,5,4,5,5,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7075-T6 under high RPM conditions.
+",4,3,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7075-T6 under thermal cycling conditions.
+",4,3,4,4,4,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7075-T6 under fatigue loading conditions.
+",5,4,5,5,5,4,3,4,4,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7075-T6 under corrosion exposure conditions.
+",4,3,4,4,4,5,4,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7075-T6 under machining tolerance limits conditions.
+",4,3,4,3,4,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7050-T7451 under high RPM conditions.
+",4,3,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7050-T7451 under thermal cycling conditions.
+",4,4,4,4,5,5,5,5,5,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7050-T7451 under fatigue loading conditions.
+",4,3,4,4,5,5,5,5,5,5
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7050-T7451 under corrosion exposure conditions.
+",5,5,5,5,5,4,4,4,4,4
+"
+Generate 4 edge test cases for aircraft propeller blade manufacturing 
+using 7050-T7451 under machining tolerance limits conditions.
+",4,4,5,4,5,4,3,4,3,4
