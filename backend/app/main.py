@@ -10,9 +10,11 @@ import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    base_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../../knowledge_base")
-    )
+    knowledge_base_candidates = [
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")),
+    ]
+    base_path = next((path for path in knowledge_base_candidates if os.path.exists(path)), knowledge_base_candidates[0])
     print("Knowledge base path:", base_path)
     print(f"LLM Provider: {settings.LLM_PROVIDER}")
 
@@ -42,12 +44,14 @@ allowed_origins = [
     "http://localhost:5500",
     "http://127.0.0.1:5500",
     "http://localhost:3000",
+    "null",
     settings.FRONTEND_URL
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
