@@ -85,13 +85,13 @@
             <h1>Access Granted</h1>
             <p>You are authorized to use the Test Case Generator.</p>
             <p class="redirect-note">Redirecting you to Test Case Generator...</p>
-            <a class="action-btn" id="continueBtn" href="index.html">Continue Now</a>
+            <a class="action-btn" id="continueBtn" href="/?mode=test_case">Continue Now</a>
         </div>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const next = params.get('next') || 'index.html?mode=test_case';
+        const next = params.get('next') || '/?mode=test_case';
         document.getElementById('continueBtn').href = next;
         setTimeout(() => {
             window.location.href = next;

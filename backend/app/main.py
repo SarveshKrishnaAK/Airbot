@@ -135,3 +135,8 @@ def root():
     if resolved_frontend_path:
         return FileResponse(os.path.join(resolved_frontend_path, "index.html"))
     return {"message": "Airbot API running"}
+
+
+@app.get("/index.html")
+def index_fallback():
+    return root()
