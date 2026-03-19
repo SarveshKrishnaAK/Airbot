@@ -129,6 +129,16 @@ def auth_access_granted_page():
     return {"message": "Frontend not bundled"}
 
 
+@app.get("/favicon.ico")
+def favicon():
+    resolved_frontend_path = resolve_frontend_path()
+    if resolved_frontend_path:
+        favicon_path = os.path.join(resolved_frontend_path, "assets", "favicon.svg")
+        if os.path.exists(favicon_path):
+            return FileResponse(favicon_path, media_type="image/svg+xml")
+    return {"message": "Favicon not found"}
+
+
 @app.get("/")
 def root():
     resolved_frontend_path = resolve_frontend_path()
