@@ -1,5 +1,7 @@
 import requests
 import csv
+from dotenv import load_dotenv
+import os
 from google import genai
 from google.genai import types
 
@@ -7,8 +9,10 @@ from google.genai import types
 # CONFIGURATION
 # -----------------------------
 
+load_dotenv()
+
 AIRBOT_URL = "http://127.0.0.1:8000/chat/"
-GEMINI_API_KEY = "AIzaSyALr-39K6IysZBCY3cRIob6KDz8mbFYoEA"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
