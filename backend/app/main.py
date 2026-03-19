@@ -13,8 +13,8 @@ import os
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     knowledge_base_candidates = [
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base")),
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base")),
     ]
     base_path = next((path for path in knowledge_base_candidates if os.path.exists(path)), knowledge_base_candidates[0])
     print("Knowledge base path:", base_path)
