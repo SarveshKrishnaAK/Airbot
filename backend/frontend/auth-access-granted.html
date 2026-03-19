@@ -48,6 +48,11 @@
             margin-bottom: 18px;
             line-height: 1.5;
         }
+        .redirect-note {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
         .action-btn {
             display: inline-flex;
             align-items: center;
@@ -79,8 +84,18 @@
             </div>
             <h1>Access Granted</h1>
             <p>You are authorized to use the Test Case Generator.</p>
-            <a class="action-btn" href="index.html">Go to Airbot</a>
+            <p class="redirect-note">Redirecting you to Test Case Generator...</p>
+            <a class="action-btn" id="continueBtn" href="index.html">Continue Now</a>
         </div>
     </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get('next') || 'index.html?mode=test_case';
+        document.getElementById('continueBtn').href = next;
+        setTimeout(() => {
+            window.location.href = next;
+        }, 1500);
+    </script>
 </body>
 </html>
