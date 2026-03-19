@@ -1,0 +1,1 @@
+window.AIRBOT_API_BASE_URL = window.AIRBOT_API_BASE_URL || '';
