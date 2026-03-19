@@ -11,6 +11,7 @@ from loguru import logger
 
 from app.services.auth_service import auth_service, User, TokenData
 from app.core.config import settings
+from app.core.rate_limiter import rate_limiter, get_client_ip
 
 
 router = APIRouter()
@@ -76,6 +77,10 @@ async def require_premium(
 @router.get("/login")
 async def login(request: Request):
     """Initiate Google OAuth login flow"""
+    client_ip = get_client_ip(request)
+    if not rate_limiter.allow(f"auth:login:{client_ip}", limit=20, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many login attempts. Please try again shortly.")
+
     redirect_uri = f"{settings.BACKEND_URL}/auth/callback"
     auth_url = auth_service.get_google_auth_url(redirect_uri)
     return {"auth_url": auth_url}
@@ -85,6 +90,10 @@ async def login(request: Request):
 async def callback(code: str, request: Request):
     """Handle Google OAuth callback"""
     try:
+        client_ip = get_client_ip(request)
+        if not rate_limiter.allow(f"auth:callback:{client_ip}", limit=30, window_seconds=60):
+            raise HTTPException(status_code=429, detail="Too many callback attempts. Please try again shortly.")
+
         redirect_uri = f"{settings.BACKEND_URL}/auth/callback"
 
         # Exchange code for tokens
@@ -107,8 +116,8 @@ async def callback(code: str, request: Request):
             "picture": user.picture
         })
 
-        # Redirect to frontend with token
-        frontend_url = f"{settings.FRONTEND_URL}/auth-success.html?token={jwt_token}"
+        # Redirect to frontend with token in URL fragment (not sent to server logs)
+        frontend_url = f"{settings.FRONTEND_URL}/auth-success.html#token={jwt_token}"
         return RedirectResponse(url=frontend_url)
 
     except Exception as e:

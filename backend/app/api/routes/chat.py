@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.models.request_models import ChatRequest
 from app.models.response_models import ChatResponse
 from app.services.llm_service import llm_service
 from app.services.rag_service import rag_service
 from app.services.auth_service import auth_service
+from app.core.rate_limiter import rate_limiter, get_client_ip
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -107,9 +108,14 @@ Context:
 
 @router.post("/", response_model=ChatResponse)
 def chat_endpoint(
+    request_context: Request,
     request: ChatRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+    client_ip = get_client_ip(request_context)
+    if not rate_limiter.allow(f"chat:{client_ip}", limit=30, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Please slow down and retry.")
+
     if request.mode == "test_case":
         if credentials is None:
             raise HTTPException(
