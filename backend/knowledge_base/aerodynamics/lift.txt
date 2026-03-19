@@ -1,0 +1,14 @@
+Lift is generated due to pressure difference between upper and lower surfaces of an airfoil.
+
+The lift equation is:
+
+L = 1/2 * rho * V^2 * S * C_L
+
+Where:
+rho = air density
+V = velocity
+S = wing area
+C_L = lift coefficient
+
+Lift increases with velocity squared.
+Angle of attack affects C_L.
