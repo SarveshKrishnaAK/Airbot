@@ -26,6 +26,7 @@ const CONFIG = {
 };
 
 const STUDENT_DOMAIN = '@student.tce.edu';
+const ACCESS_GRANTED_SEEN_KEY = 'airbot_access_granted_seen';
 
 function redirectToAccessDenied(reason) {
     const encodedReason = encodeURIComponent(reason || 'not_authorized');
@@ -70,6 +71,11 @@ async function init() {
     updateModeIndicator();
     autoResizeTextarea();
     await checkAuthStatus();
+
+    const initialMode = new URLSearchParams(window.location.search).get('mode');
+    if (initialMode === 'test_case') {
+        switchMode('test_case');
+    }
 }
 
 // Event Listeners Setup
@@ -121,6 +127,12 @@ function switchMode(mode) {
         redirectToAccessDenied(
             !state.isAuthenticated ? 'login_required' : 'domain_restricted'
         );
+        return;
+    }
+
+    if (mode === 'test_case' && hasTestCaseAccess() && !sessionStorage.getItem(ACCESS_GRANTED_SEEN_KEY)) {
+        sessionStorage.setItem(ACCESS_GRANTED_SEEN_KEY, '1');
+        window.location.href = 'auth-access-granted.html?next=index.html%3Fmode%3Dtest_case';
         return;
     }
 
@@ -640,6 +652,7 @@ async function handleLogin() {
 // Handle logout
 function handleLogout() {
     localStorage.removeItem('airbot_token');
+    sessionStorage.removeItem(ACCESS_GRANTED_SEEN_KEY);
     state.user = null;
     state.isAuthenticated = false;
     updateUIForGuest();
