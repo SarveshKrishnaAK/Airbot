@@ -75,9 +75,10 @@
     </div>
 
     <script>
-        // Get token from URL
+        // Get token from URL fragment first (preferred), then query fallback
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
+        const token = hashParams.get('token') || urlParams.get('token');
 
         if (token) {
             // Store token in localStorage
