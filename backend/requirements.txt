@@ -15,7 +15,6 @@ python-jose[cryptography]>=3.3.0
 httpx>=0.26.0
 
 # RAG & Embeddings
-sentence-transformers>=2.2.0
 faiss-cpu>=1.7.0
 numpy>=1.24.0
 
