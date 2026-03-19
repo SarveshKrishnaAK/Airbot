@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbot - Aerospace Intelligence Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="stars"></div>
+        <div class="stars2"></div>
+        <div class="stars3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>Airbot</h1>
+                    <span class="tagline">Aerospace Intelligence Platform</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="header-badge">
+                    <span class="badge-dot"></span>
+                    <span>AI Powered</span>
+                </div>
+                <!-- User Auth Section -->
+                <div class="user-section" id="userSection">
+                    <button class="login-btn" id="loginBtn">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Sign In
+                    </button>
+                    <div class="user-profile" id="userProfile" style="display: none;">
+                        <img src="" alt="Profile" id="userAvatar" class="user-avatar">
+                        <span class="user-name" id="userName"></span>
+                        <span class="premium-indicator" id="premiumIndicator" style="display: none;">PRO</span>
+                        <button class="logout-btn" id="logoutBtn" title="Sign out">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector-container">
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="general_chat">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="mode-info">
+                        <span>General Chat</span>
+                        <small class="model-badge">Gemma2</small>
+                    </div>
+                </button>
+                <button class="mode-btn" data-mode="test_case">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="mode-info">
+                        <span>Test Case Generator</span>
+                        <small class="model-badge">Llama3 + RAG</small>
+                    </div>
+                </button>
+                <div class="mode-indicator"></div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <div class="chat-container">
+                <!-- Welcome Message -->
+                <div class="welcome-section" id="welcomeSection">
+                    <div class="welcome-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </div>
+                    <h2>Welcome to Airbot</h2>
+                    <p>Your AI-powered aerospace engineering assistant. Ask questions about aerodynamics, propulsion, structures, or generate comprehensive test cases for aerospace systems.</p>
+                    <div class="quick-prompts">
+                        <button class="quick-prompt" data-prompt="Explain the principles of lift generation in aircraft wings">
+                            <span class="prompt-icon">?</span>
+                            Lift generation principles
+                        </button>
+                        <button class="quick-prompt" data-prompt="Generate test cases for aircraft landing gear retraction system">
+                            <span class="prompt-icon">?</span>
+                            Landing gear test cases
+                        </button>
+                        <button class="quick-prompt" data-prompt="What are the different types of jet engines?">
+                            <span class="prompt-icon">?</span>
+                            Types of jet engines
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="messages-container" id="messagesContainer">
+                    <!-- Messages will be dynamically added here -->
+                </div>
+
+                <!-- Download Button (Test Case Mode Only) -->
+                <div class="download-section" id="downloadSection">
+                    <button class="download-btn" id="downloadBtn">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Download Excel</span>
+                        <small class="premium-badge">Premium</small>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Input Area -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div class="input-field-container">
+                    <textarea
+                        id="userInput"
+                        placeholder="Ask about aerospace engineering or request test cases..."
+                        rows="1"
+                        autofocus
+                    ></textarea>
+                    <div class="input-actions">
+                        <span class="char-count" id="charCount">0</span>
+                        <button class="send-btn" id="sendBtn" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-hint">
+                    <span>Press <kbd>Enter</kbd> to send, <kbd>Shift + Enter</kbd> for new line</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <span>Powered by Gemma2 & Llama3 via Ollama</span>
+                <span class="separator">|</span>
+                <span>RAG-Enhanced Aerospace Intelligence</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <p class="loading-text">Processing your request...</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
