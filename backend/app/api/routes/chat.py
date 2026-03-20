@@ -12,6 +12,25 @@ router = APIRouter()
 security = HTTPBearer(auto_error=False)
 
 
+AEROSPACE_KEYWORDS = {
+    "aero", "aerodynamics", "aeronautical", "aerospace", "air", "aircraft", "airfoil",
+    "airspeed", "altitude", "avionics", "blade", "boeing", "cabin", "cockpit", "compressor",
+    "drag", "engine", "faa", "fuselage", "gear", "helicopter", "hydraulic", "icao", "jet",
+    "landing", "lift", "mach", "missile", "nacelle", "propeller", "propulsion", "radar",
+    "runway", "sae", "stability", "stall", "thrust", "turbine", "uav", "wing"
+}
+
+OUT_OF_CONTEXT_REPLY = (
+    "I'm not allowed to answer questions outside aerospace/aircraft context. "
+    "Please ask an aerospace- or aircraft-related question."
+)
+
+
+def is_aerospace_related(question: str) -> bool:
+    normalized = question.lower().replace("-", " ").replace("/", " ")
+    return any(keyword in normalized for keyword in AEROSPACE_KEYWORDS)
+
+
 def get_test_case_prompt(context: str) -> str:
     return f"""You are Airbot, an expert Aerospace Test Engineer AI specialized in generating comprehensive, detailed test cases for Aeronautical Engineering systems, components, and scenarios.
 
@@ -97,6 +116,9 @@ Generate comprehensive, professional-grade test cases that would be suitable for
 
 def get_general_chat_prompt(context: str) -> str:
     return f"""You are Airbot, an advanced AI assistant for Aeronautical Engineering students.
+You must only answer aerospace/aircraft-related questions.
+If a question is outside aerospace/aircraft context, respond exactly with:
+"{OUT_OF_CONTEXT_REPLY}"
 Use the provided aerospace context to answer accurately and provide detailed explanations.
 If context is insufficient, rely on general aerospace knowledge.
 Format your response in clear paragraphs with proper explanations.
@@ -137,6 +159,16 @@ def chat_endpoint(
                 status_code=403,
                 detail="Only @student.tce.edu or @tce.edu Google accounts can access Test Case Generator."
             )
+
+    if request.mode == "general_chat" and not is_aerospace_related(request.question):
+        answer = OUT_OF_CONTEXT_REPLY
+
+        if token_data and token_data.email:
+            update_user_preferred_mode(token_data.email, request.mode)
+            add_chat_message(token_data.email, "user", request.mode, request.question)
+            add_chat_message(token_data.email, "assistant", request.mode, answer)
+
+        return ChatResponse(answer=answer)
 
     retrieved_context = rag_service.retrieve_context(request.question)
 
