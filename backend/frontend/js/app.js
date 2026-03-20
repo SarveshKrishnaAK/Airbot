@@ -27,7 +27,7 @@ const CONFIG = {
     }
 };
 
-const STUDENT_DOMAIN = '@student.tce.edu';
+const MEMBER_DOMAINS = ['@student.tce.edu', '@tce.edu'];
 const ACCESS_GRANTED_SEEN_KEY = 'airbot_access_granted_seen';
 
 function redirectToAccessDenied(reason) {
@@ -682,8 +682,8 @@ function getAuthHeaders() {
 
 function hasTestCaseAccess() {
     const email = (state.user?.email || '').toLowerCase();
-    const isStudentDomain = email.endsWith(STUDENT_DOMAIN);
-    return Boolean(state.isAuthenticated && state.user?.is_premium && isStudentDomain);
+    const isMemberDomain = MEMBER_DOMAINS.some((domain) => email.endsWith(domain));
+    return Boolean(state.isAuthenticated && state.user?.is_premium && isMemberDomain);
 }
 
 // Check authentication status on page load

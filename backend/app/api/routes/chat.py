@@ -126,7 +126,7 @@ def chat_endpoint(
         if credentials is None:
             raise HTTPException(
                 status_code=403,
-                detail="Member login required. Sign in with Google using a @student.tce.edu account to access Test Case Generator."
+                detail="Member login required. Sign in with Google using a @student.tce.edu or @tce.edu account to access Test Case Generator."
             )
 
         if token_data is None:
@@ -135,7 +135,7 @@ def chat_endpoint(
         if not auth_service.is_student_member(token_data.email):
             raise HTTPException(
                 status_code=403,
-                detail="Only @student.tce.edu Google accounts can access Test Case Generator."
+                detail="Only @student.tce.edu or @tce.edu Google accounts can access Test Case Generator."
             )
 
     retrieved_context = rag_service.retrieve_context(request.question)

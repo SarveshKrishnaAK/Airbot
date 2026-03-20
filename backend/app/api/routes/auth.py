@@ -86,7 +86,7 @@ async def require_premium(
     if not has_member_access:
         raise HTTPException(
             status_code=403,
-            detail="Only @student.tce.edu Google accounts can access this feature"
+            detail="Only @student.tce.edu or @tce.edu Google accounts can access this feature"
         )
     return token_data
 
