@@ -21,8 +21,7 @@ AEROSPACE_KEYWORDS = {
 }
 
 OUT_OF_CONTEXT_REPLY = (
-    "I'm not allowed to answer questions outside aerospace/aircraft context. "
-    "Please ask an aerospace- or aircraft-related question."
+    "I’d love to help, but I’m currently limited to answering questions related to aerospace and aircraft. If you have anything in that area, feel free to ask—I’m here for you!"
 )
 
 
