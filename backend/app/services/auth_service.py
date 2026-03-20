@@ -35,7 +35,7 @@ class User(BaseModel):
 class AuthService:
     GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
-    STUDENT_DOMAIN = "student.tce.edu"
+    MEMBER_DOMAINS = ("student.tce.edu", "tce.edu")
 
     def __init__(self):
         self.client_id = settings.GOOGLE_CLIENT_ID
@@ -151,7 +151,8 @@ class AuthService:
     def is_student_member(self, email: Optional[str]) -> bool:
         if not email:
             return False
-        return email.lower().endswith(f"@{self.STUDENT_DOMAIN}")
+        normalized_email = email.lower()
+        return any(normalized_email.endswith(f"@{domain}") for domain in self.MEMBER_DOMAINS)
 
     def get_user(self, email: str) -> Optional[User]:
         """Get user by email"""
