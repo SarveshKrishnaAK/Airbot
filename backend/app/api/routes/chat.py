@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import re
 from app.models.request_models import ChatRequest
 from app.models.response_models import ChatResponse
 from app.services.llm_service import llm_service
@@ -24,10 +25,69 @@ OUT_OF_CONTEXT_REPLY = (
     "I’d love to help, but I’m currently limited to answering questions related to aerospace and aircraft. If you have anything in that area, feel free to ask—I’m here for you!"
 )
 
+GREETING_WORDS = {
+    "hi", "hello", "hey", "hiya", "greetings", "hola", "yo", "sup"
+}
+
+GREETING_PHRASES = {
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "good night",
+    "how are you",
+    "how are you doing",
+    "how is it going",
+    "what's up",
+    "whats up",
+    "howdy",
+    "thank you",
+    "thanks",
+}
+
+FAREWELL_PHRASES = {
+    "bye",
+    "goodbye",
+    "see you",
+    "see you later",
+}
+
+GREETING_REPLY = (
+    "Hello! I'm Airbot, your aerospace and aircraft assistant. "
+    "I can help with aerodynamics, aircraft systems, propulsion, avionics, structures, and aerospace test-related questions. "
+    "How can I help you in aerospace today?"
+)
+
+FAREWELL_REPLY = (
+    "Goodbye from Airbot! Wishing you smooth flights and safe landings. "
+    "Come back anytime for aerospace and aircraft questions."
+)
+
 
 def is_aerospace_related(question: str) -> bool:
     normalized = question.lower().replace("-", " ").replace("/", " ")
     return any(keyword in normalized for keyword in AEROSPACE_KEYWORDS)
+
+
+def is_greeting_message(question: str) -> bool:
+    normalized = re.sub(r"[^a-z\s]", " ", question.lower())
+    normalized = " ".join(normalized.split()).strip()
+    if not normalized:
+        return False
+
+    if normalized in GREETING_PHRASES:
+        return True
+
+    words = [word for word in normalized.split() if word]
+    if not words or len(words) > 4:
+        return False
+
+    return all(word in GREETING_WORDS for word in words)
+
+
+def is_farewell_message(question: str) -> bool:
+    normalized = re.sub(r"[^a-z\s]", " ", question.lower())
+    normalized = " ".join(normalized.split()).strip()
+    return normalized in FAREWELL_PHRASES
 
 
 def get_test_case_prompt(context: str) -> str:
@@ -158,6 +218,26 @@ def chat_endpoint(
                 status_code=403,
                 detail="Only @student.tce.edu or @tce.edu Google accounts can access Test Case Generator."
             )
+
+    if request.mode == "general_chat" and is_greeting_message(request.question):
+        answer = GREETING_REPLY
+
+        if token_data and token_data.email:
+            update_user_preferred_mode(token_data.email, request.mode)
+            add_chat_message(token_data.email, "user", request.mode, request.question)
+            add_chat_message(token_data.email, "assistant", request.mode, answer)
+
+        return ChatResponse(answer=answer)
+
+    if request.mode == "general_chat" and is_farewell_message(request.question):
+        answer = FAREWELL_REPLY
+
+        if token_data and token_data.email:
+            update_user_preferred_mode(token_data.email, request.mode)
+            add_chat_message(token_data.email, "user", request.mode, request.question)
+            add_chat_message(token_data.email, "assistant", request.mode, answer)
+
+        return ChatResponse(answer=answer)
 
     if request.mode == "general_chat" and not is_aerospace_related(request.question):
         answer = OUT_OF_CONTEXT_REPLY
