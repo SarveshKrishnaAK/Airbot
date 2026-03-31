@@ -85,6 +85,22 @@
 
         <!-- Main Chat Area -->
         <main class="main-content">
+            <aside class="conversation-sidebar" id="conversationSidebar">
+                <div class="conversation-sidebar-header">
+                    <h3>Chats</h3>
+                    <button class="new-chat-btn" id="newChatBtn" type="button"><span>+ New Chat</span></button>
+                </div>
+                <div class="conversation-groups">
+                    <div class="conversation-group" id="conversationGroupGeneral">
+                        <div class="conversation-group-title">General Chat</div>
+                        <div class="conversation-list" id="chatListGeneral"></div>
+                    </div>
+                    <div class="conversation-group" id="conversationGroupTest">
+                        <div class="conversation-group-title">Test Case Chats</div>
+                        <div class="conversation-list" id="chatListTestCase"></div>
+                    </div>
+                </div>
+            </aside>
             <div class="chat-container">
                 <!-- Welcome Message -->
                 <div class="welcome-section" id="welcomeSection">
