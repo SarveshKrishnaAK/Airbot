@@ -43,6 +43,7 @@ const state = {
     messages: [],
     lastTestCaseResponse: null,
     lastTestCaseQuery: '',
+    largeDownloadButtonShown: false, // Track if large button was shown for current test case
     activeConversationIdByMode: {
         general_chat: null,
         test_case: null
@@ -106,6 +107,7 @@ function clearMessagesAndResetWelcome() {
     }
     state.lastTestCaseResponse = null;
     state.lastTestCaseQuery = '';
+    state.largeDownloadButtonShown = false; // Reset flag for new chat
     hideDownloadSection();
 }
 
@@ -286,7 +288,8 @@ async function loadActiveConversationMessages() {
         if (state.currentMode === 'test_case' && latestAssistant) {
             state.lastTestCaseResponse = latestAssistant.answer;
             state.lastTestCaseQuery = latestAssistant.query || '';
-            showDownloadSection();
+            // Don't show large button when loading history - user already saw it
+            // The inline download buttons are sufficient
         }
     } catch (error) {
         console.error('Failed to load conversation history:', error);
@@ -381,9 +384,9 @@ async function switchMode(mode, options = { loadMessages: true }) {
     // Update placeholder text
     if (mode === 'test_case') {
         elements.userInput.placeholder = 'Describe the aerospace system or scenario to generate test cases...';
-        if (state.lastTestCaseResponse) {
-            showDownloadSection();
-        }
+        // Don't show large button when switching to test_case mode
+        // It should only show immediately after a successful test case generation
+        hideDownloadSection();
     } else {
         elements.userInput.placeholder = 'Ask about aerospace engineering or request test cases...';
         hideDownloadSection();
@@ -518,7 +521,11 @@ async function sendMessage() {
         if (state.currentMode === 'test_case') {
             state.lastTestCaseResponse = data.answer;
             state.lastTestCaseQuery = question;
-            showDownloadSection();
+            // Only show large button once per test case generation
+            if (!state.largeDownloadButtonShown) {
+                state.largeDownloadButtonShown = true;
+                showDownloadSection();
+            }
         }
 
     } catch (error) {
