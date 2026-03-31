@@ -7,7 +7,13 @@ from app.services.llm_service import llm_service
 from app.services.rag_service import rag_service
 from app.services.auth_service import auth_service
 from app.core.rate_limiter import rate_limiter, get_client_ip
-from app.db.persistence import update_user_preferred_mode, add_chat_message
+from app.db.persistence import (
+    update_user_preferred_mode,
+    add_chat_message,
+    create_conversation,
+    get_conversation,
+    upsert_user,
+)
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -199,9 +205,17 @@ def chat_endpoint(
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Please slow down and retry.")
 
     token_data = None
+    conversation_id = request.conversation_id
 
     if credentials is not None:
         token_data = auth_service.verify_token(credentials.credentials)
+        if token_data and token_data.email:
+            upsert_user(
+                email=token_data.email,
+                name=token_data.name or token_data.email,
+                picture=token_data.picture,
+                is_member=auth_service.is_student_member(token_data.email),
+            )
 
     if request.mode == "test_case":
         if credentials is None:
@@ -218,36 +232,45 @@ def chat_endpoint(
                 status_code=403,
                 detail="Only @student.tce.edu or @tce.edu Google accounts can access Test Case Generator."
             )
+    if token_data and token_data.email:
+        if conversation_id is not None:
+            conversation = get_conversation(token_data.email, conversation_id)
+            if not conversation:
+                raise HTTPException(status_code=404, detail="Conversation not found")
+            if conversation["mode"] != request.mode:
+                raise HTTPException(status_code=400, detail="Conversation mode mismatch")
+        else:
+            conversation_id = create_conversation(token_data.email, request.mode, request.question)
 
     if request.mode == "general_chat" and is_greeting_message(request.question):
         answer = GREETING_REPLY
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question)
-            add_chat_message(token_data.email, "assistant", request.mode, answer)
+            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+            add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
-        return ChatResponse(answer=answer)
+        return ChatResponse(answer=answer, conversation_id=conversation_id)
 
     if request.mode == "general_chat" and is_farewell_message(request.question):
         answer = FAREWELL_REPLY
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question)
-            add_chat_message(token_data.email, "assistant", request.mode, answer)
+            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+            add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
-        return ChatResponse(answer=answer)
+        return ChatResponse(answer=answer, conversation_id=conversation_id)
 
     if request.mode == "general_chat" and not is_aerospace_related(request.question):
         answer = OUT_OF_CONTEXT_REPLY
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question)
-            add_chat_message(token_data.email, "assistant", request.mode, answer)
+            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+            add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
-        return ChatResponse(answer=answer)
+        return ChatResponse(answer=answer, conversation_id=conversation_id)
 
     retrieved_context = rag_service.retrieve_context(request.question)
 
@@ -264,7 +287,7 @@ def chat_endpoint(
 
     if token_data and token_data.email:
         update_user_preferred_mode(token_data.email, request.mode)
-        add_chat_message(token_data.email, "user", request.mode, request.question)
-        add_chat_message(token_data.email, "assistant", request.mode, answer)
+        add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+        add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
-    return ChatResponse(answer=answer)
+    return ChatResponse(answer=answer, conversation_id=conversation_id)

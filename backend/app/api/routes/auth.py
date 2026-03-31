@@ -13,7 +13,13 @@ from loguru import logger
 from app.services.auth_service import auth_service, User, TokenData
 from app.core.config import settings
 from app.core.rate_limiter import rate_limiter, get_client_ip
-from app.db.persistence import get_user_settings, update_user_preferred_mode, get_chat_history
+from app.db.persistence import (
+    get_user_settings,
+    update_user_preferred_mode,
+    get_chat_history,
+    list_conversations,
+    get_conversation_history,
+)
 
 
 router = APIRouter()
@@ -50,6 +56,15 @@ class ChatHistoryItem(BaseModel):
     mode: str
     message: str
     created_at: str
+    conversation_id: Optional[int] = None
+
+
+class ConversationItem(BaseModel):
+    id: int
+    mode: Literal["general_chat", "test_case"]
+    title: str
+    created_at: str
+    updated_at: str
 
 
 async def get_current_user(
@@ -208,8 +223,25 @@ async def update_settings(
 @router.get("/history", response_model=list[ChatHistoryItem])
 async def user_history(
     limit: int = 50,
+    mode: Optional[Literal["general_chat", "test_case"]] = None,
+    conversation_id: Optional[int] = None,
     token_data: TokenData = Depends(require_auth)
 ):
     safe_limit = max(1, min(limit, 200))
-    history = get_chat_history(token_data.email, limit=safe_limit)
+    if conversation_id is not None:
+        history = get_conversation_history(token_data.email, conversation_id=conversation_id, limit=safe_limit)
+    else:
+        history = get_chat_history(token_data.email, limit=safe_limit)
+        if mode is not None:
+            history = [item for item in history if item.get("mode") == mode]
     return [ChatHistoryItem(**item) for item in history]
+
+
+@router.get("/conversations", response_model=list[ConversationItem])
+async def user_conversations(
+    mode: Optional[Literal["general_chat", "test_case"]] = None,
+    limit: int = 50,
+    token_data: TokenData = Depends(require_auth)
+):
+    conversations = list_conversations(token_data.email, mode=mode, limit=limit)
+    return [ConversationItem(**item) for item in conversations]
