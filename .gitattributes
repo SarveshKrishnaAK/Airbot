@@ -1,2 +1,1 @@
-*.pdf filter=lfs diff=lfs merge=lfs -text
 knowledge_base/general/*.pdf filter=lfs diff=lfs merge=lfs -text
