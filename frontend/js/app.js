@@ -23,7 +23,8 @@ const CONFIG = {
         AUTH_ME: '/auth/me',
         AUTH_VERIFY: '/auth/verify',
         AUTH_SETTINGS: '/auth/settings',
-        AUTH_HISTORY: '/auth/history'
+        AUTH_HISTORY: '/auth/history',
+        AUTH_CONVERSATIONS: '/auth/conversations'
     }
 };
 
@@ -42,6 +43,16 @@ const state = {
     messages: [],
     lastTestCaseResponse: null,
     lastTestCaseQuery: '',
+    activeConversationIdByMode: {
+        general_chat: null,
+        test_case: null
+    },
+    conversationsByMode: {
+        general_chat: [],
+        test_case: []
+    },
+    downloadPayloads: {},
+    downloadPayloadCounter: 0,
     user: null,
     isAuthenticated: false
 };
@@ -65,6 +76,10 @@ const elements = {
     userAvatar: document.getElementById('userAvatar'),
     userName: document.getElementById('userName'),
     premiumIndicator: document.getElementById('premiumIndicator')
+    ,
+    newChatBtn: document.getElementById('newChatBtn'),
+    chatListGeneral: document.getElementById('chatListGeneral'),
+    chatListTestCase: document.getElementById('chatListTestCase')
 };
 
 // Initialize Application
@@ -76,8 +91,9 @@ async function init() {
 
     const initialMode = new URLSearchParams(window.location.search).get('mode');
     if (initialMode === 'test_case') {
-        switchMode('test_case');
+        await switchMode('test_case');
     }
+    renderConversationLists();
 }
 
 function clearMessagesAndResetWelcome() {
@@ -88,6 +104,19 @@ function clearMessagesAndResetWelcome() {
     if (elements.welcomeSection) {
         elements.welcomeSection.classList.remove('hidden');
     }
+    state.lastTestCaseResponse = null;
+    state.lastTestCaseQuery = '';
+    hideDownloadSection();
+}
+
+function truncateConversationTitle(text) {
+    const normalized = (text || '').trim().replace(/\s+/g, ' ');
+    if (!normalized) return 'New Chat';
+    return normalized.length <= 60 ? normalized : `${normalized.slice(0, 57)}...`;
+}
+
+function getActiveConversationId() {
+    return state.activeConversationIdByMode[state.currentMode] || null;
 }
 
 async function persistPreferredMode(mode) {
@@ -118,40 +147,169 @@ async function loadUserPersonalization() {
         if (settingsResponse.ok) {
             const settingsData = await settingsResponse.json();
             if (settingsData.preferred_mode === 'test_case' && hasTestCaseAccess()) {
-                switchMode('test_case');
+                await switchMode('test_case');
             }
         }
     } catch (error) {
         console.error('Failed to load user settings:', error);
     }
 
+    await loadConversations();
+    await loadActiveConversationMessages();
+}
+
+async function loadConversations() {
+    if (!state.isAuthenticated) {
+        renderConversationLists();
+        return;
+    }
+
     try {
-        const historyResponse = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_HISTORY}?limit=40`, {
+        const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_CONVERSATIONS}?limit=100`, {
             headers: getAuthHeaders()
         });
+        if (!response.ok) {
+            renderConversationLists();
+            return;
+        }
 
+        const conversations = await response.json();
+        state.conversationsByMode.general_chat = [];
+        state.conversationsByMode.test_case = [];
+
+        (Array.isArray(conversations) ? conversations : []).forEach((conversation) => {
+            const mode = conversation.mode === 'test_case' ? 'test_case' : 'general_chat';
+            state.conversationsByMode[mode].push(conversation);
+        });
+
+        ['general_chat', 'test_case'].forEach((mode) => {
+            const selectedId = state.activeConversationIdByMode[mode];
+            const exists = state.conversationsByMode[mode].some((item) => item.id === selectedId);
+            if (!exists) {
+                state.activeConversationIdByMode[mode] = state.conversationsByMode[mode][0]?.id || null;
+            }
+        });
+
+        renderConversationLists();
+        if (!state.activeConversationIdByMode[state.currentMode] && state.currentMode === 'test_case') {
+            hideDownloadSection();
+        }
+    } catch (error) {
+        console.error('Failed to load conversations:', error);
+        renderConversationLists();
+    }
+}
+
+function renderConversationLists() {
+    renderConversationListForMode('general_chat');
+    renderConversationListForMode('test_case');
+}
+
+function renderConversationListForMode(mode) {
+    const container = mode === 'test_case' ? elements.chatListTestCase : elements.chatListGeneral;
+    if (!container) return;
+
+    const conversations = state.conversationsByMode[mode] || [];
+    if (conversations.length === 0) {
+        container.innerHTML = `<div class="conversation-empty">No chats yet</div>`;
+        return;
+    }
+
+    const activeId = state.activeConversationIdByMode[mode];
+    container.innerHTML = conversations.map((conversation) => {
+        const isActive = conversation.id === activeId;
+        return `
+            <button class="conversation-item ${isActive ? 'active' : ''}" type="button" data-conversation-id="${conversation.id}" data-mode="${mode}">
+                <span class="conversation-item-title">${escapeHtml(conversation.title || 'New Chat')}</span>
+            </button>
+        `;
+    }).join('');
+
+    container.querySelectorAll('.conversation-item').forEach((itemBtn) => {
+        itemBtn.addEventListener('click', async () => {
+            const clickedMode = itemBtn.dataset.mode;
+            const conversationId = Number(itemBtn.dataset.conversationId);
+            await switchMode(clickedMode, { loadMessages: false });
+            await selectConversation(clickedMode, conversationId);
+        });
+    });
+}
+
+async function selectConversation(mode, conversationId) {
+    state.activeConversationIdByMode[mode] = conversationId;
+    renderConversationLists();
+    if (state.currentMode === mode) {
+        await loadActiveConversationMessages();
+    }
+}
+
+async function createNewChat(mode = state.currentMode) {
+    state.activeConversationIdByMode[mode] = null;
+    if (state.currentMode !== mode) {
+        await switchMode(mode, { loadMessages: false });
+    }
+    clearMessagesAndResetWelcome();
+    renderConversationLists();
+}
+
+async function loadActiveConversationMessages() {
+    clearMessagesAndResetWelcome();
+    const conversationId = getActiveConversationId();
+    if (!state.isAuthenticated || !conversationId) {
+        return;
+    }
+
+    try {
+        const historyResponse = await fetch(
+            `${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.AUTH_HISTORY}?conversation_id=${conversationId}&limit=200`,
+            { headers: getAuthHeaders() }
+        );
         if (!historyResponse.ok) return;
 
         const historyItems = await historyResponse.json();
         if (!Array.isArray(historyItems) || historyItems.length === 0) return;
 
-        clearMessagesAndResetWelcome();
         showMessagesContainer();
-
-        historyItems.forEach(item => {
+        let latestAssistant = null;
+        historyItems.forEach((item) => {
             const messageType = item.role === 'assistant' ? 'assistant' : 'user';
-            addMessage(messageType, item.message, item.mode || 'general_chat');
+            addMessage(messageType, item.message, item.mode || state.currentMode, {
+                query: item.role === 'assistant' ? findPreviousUserQuery(historyItems, item) : null
+            });
+            if (item.role === 'assistant' && (item.mode || state.currentMode) === 'test_case') {
+                latestAssistant = {
+                    answer: item.message,
+                    query: findPreviousUserQuery(historyItems, item)
+                };
+            }
         });
+        if (state.currentMode === 'test_case' && latestAssistant) {
+            state.lastTestCaseResponse = latestAssistant.answer;
+            state.lastTestCaseQuery = latestAssistant.query || '';
+            showDownloadSection();
+        }
     } catch (error) {
-        console.error('Failed to load user history:', error);
+        console.error('Failed to load conversation history:', error);
     }
+}
+
+function findPreviousUserQuery(historyItems, assistantItem) {
+    const index = historyItems.indexOf(assistantItem);
+    for (let i = index - 1; i >= 0; i -= 1) {
+        if (historyItems[i].role === 'user') {
+            return historyItems[i].message;
+        }
+    }
+    return '';
 }
 
 // Event Listeners Setup
 function setupEventListeners() {
     // Mode switching
     elements.modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        btn.addEventListener('click', async () => {
+            await switchMode(btn.dataset.mode);
+        });
     });
 
     // Input handling
@@ -178,6 +336,11 @@ function setupEventListeners() {
     if (elements.downloadBtn) {
         elements.downloadBtn.addEventListener('click', downloadTestCases);
     }
+    if (elements.newChatBtn) {
+        elements.newChatBtn.addEventListener('click', async () => {
+            await createNewChat(state.currentMode);
+        });
+    }
 
     // Auth buttons
     if (elements.loginBtn) {
@@ -189,7 +352,7 @@ function setupEventListeners() {
 }
 
 // Mode Switching
-function switchMode(mode) {
+async function switchMode(mode, options = { loadMessages: true }) {
     if (state.currentMode === mode) return;
 
     if (mode === 'test_case' && !hasTestCaseAccess()) {
@@ -218,13 +381,19 @@ function switchMode(mode) {
     // Update placeholder text
     if (mode === 'test_case') {
         elements.userInput.placeholder = 'Describe the aerospace system or scenario to generate test cases...';
+        if (state.lastTestCaseResponse) {
+            showDownloadSection();
+        }
     } else {
         elements.userInput.placeholder = 'Ask about aerospace engineering or request test cases...';
-        // Hide download button in general chat mode
         hideDownloadSection();
     }
 
-    persistPreferredMode(mode);
+    await persistPreferredMode(mode);
+    renderConversationLists();
+    if (options.loadMessages) {
+        await loadActiveConversationMessages();
+    }
 }
 
 // Update Mode Indicator Position
@@ -279,8 +448,10 @@ async function sendMessage() {
     // Show messages container, hide welcome
     showMessagesContainer();
 
+    const existingConversationId = getActiveConversationId();
+
     // Add user message
-    addMessage('user', question);
+    addMessage('user', question, state.currentMode, { query: question });
 
     // Clear input
     elements.userInput.value = '';
@@ -298,7 +469,8 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 question: question,
-                mode: state.currentMode
+                mode: state.currentMode,
+                conversation_id: existingConversationId
             })
         });
 
@@ -326,9 +498,21 @@ async function sendMessage() {
         }
 
         const data = await response.json();
+        const resolvedConversationId = Number(data.conversation_id || existingConversationId || 0) || null;
+        if (resolvedConversationId) {
+            state.activeConversationIdByMode[state.currentMode] = resolvedConversationId;
+            upsertConversationInState(state.currentMode, {
+                id: resolvedConversationId,
+                mode: state.currentMode,
+                title: truncateConversationTitle(question),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+            renderConversationLists();
+        }
 
         // Add assistant message
-        addMessage('assistant', data.answer, state.currentMode);
+        addMessage('assistant', data.answer, state.currentMode, { query: question });
 
         // Store test case response for download
         if (state.currentMode === 'test_case') {
@@ -345,6 +529,23 @@ async function sendMessage() {
     }
 }
 
+function upsertConversationInState(mode, conversation) {
+    const list = state.conversationsByMode[mode] || [];
+    const existingIndex = list.findIndex((item) => item.id === conversation.id);
+    const merged = {
+        ...conversation,
+        title: conversation.title || 'New Chat',
+        updated_at: conversation.updated_at || new Date().toISOString()
+    };
+    if (existingIndex >= 0) {
+        list[existingIndex] = { ...list[existingIndex], ...merged };
+    } else {
+        list.unshift(merged);
+    }
+    list.sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+    state.conversationsByMode[mode] = list;
+}
+
 // Show Messages Container
 function showMessagesContainer() {
     elements.welcomeSection.classList.add('hidden');
@@ -352,7 +553,7 @@ function showMessagesContainer() {
 }
 
 // Add Message to Chat
-function addMessage(type, content, mode = 'general_chat') {
+function addMessage(type, content, mode = 'general_chat', options = {}) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
 
@@ -369,13 +570,46 @@ function addMessage(type, content, mode = 'general_chat') {
         formattedContent = `<div class="user-message">${escapeHtml(content)}</div>`;
     }
 
+    const shouldRenderInlineDownload = type === 'assistant' && mode === 'test_case' && state.isAuthenticated && hasTestCaseAccess();
+    const downloadPayloadId = shouldRenderInlineDownload
+        ? createDownloadPayload(content, options.query || '')
+        : null;
+    const inlineDownloadButton = shouldRenderInlineDownload
+        ? `
+            <div class="inline-download-row">
+                <button class="inline-download-btn" type="button" data-download-id="${downloadPayloadId}">
+                    Download Excel
+                </button>
+            </div>
+        `
+        : '';
+
     messageDiv.innerHTML = `
         <div class="message-avatar">${avatarSvg}</div>
-        <div class="message-content">${formattedContent}</div>
+        <div class="message-content">${formattedContent}${inlineDownloadButton}</div>
     `;
+
+    const inlineBtn = messageDiv.querySelector('.inline-download-btn');
+    if (inlineBtn) {
+        inlineBtn.addEventListener('click', async () => {
+            const payload = state.downloadPayloads[inlineBtn.dataset.downloadId];
+            if (!payload) {
+                alert('Download data unavailable for this message.');
+                return;
+            }
+            await downloadExcel(payload.content, payload.query, inlineBtn);
+        });
+    }
 
     elements.messagesContainer.appendChild(messageDiv);
     scrollToBottom();
+}
+
+function createDownloadPayload(content, query) {
+    state.downloadPayloadCounter += 1;
+    const id = `dl-${state.downloadPayloadCounter}`;
+    state.downloadPayloads[id] = { content, query };
+    return id;
 }
 
 // Format Test Case Response
@@ -592,18 +826,25 @@ async function downloadTestCases() {
         return;
     }
 
-    const downloadBtn = elements.downloadBtn;
-    const originalContent = downloadBtn.innerHTML;
+    await downloadExcel(state.lastTestCaseResponse, state.lastTestCaseQuery, elements.downloadBtn);
+}
 
+async function downloadExcel(content, query, buttonEl) {
+    const downloadBtn = buttonEl;
+    const isMainButton = downloadBtn === elements.downloadBtn;
+    const originalContent = downloadBtn.innerHTML;
     try {
-        // Show loading state on button
         downloadBtn.disabled = true;
-        downloadBtn.innerHTML = `
-            <svg class="spin" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="31.4" stroke-dashoffset="10"/>
-            </svg>
-            <span>Generating...</span>
-        `;
+        if (isMainButton) {
+            downloadBtn.innerHTML = `
+                <svg class="spin" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+                </svg>
+                <span>Generating...</span>
+            `;
+        } else {
+            downloadBtn.textContent = 'Generating...';
+        }
 
         const response = await fetch(`${CONFIG.API_BASE_URL}${CONFIG.ENDPOINTS.DOWNLOAD}`, {
             method: 'POST',
@@ -611,8 +852,8 @@ async function downloadTestCases() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                content: state.lastTestCaseResponse,
-                query: state.lastTestCaseQuery
+                content,
+                query
             })
         });
 
@@ -641,13 +882,16 @@ async function downloadTestCases() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        // Show success state briefly
-        downloadBtn.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none">
-                <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>Downloaded!</span>
-        `;
+        if (isMainButton) {
+            downloadBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M9 11L12 14L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Downloaded!</span>
+            `;
+        } else {
+            downloadBtn.textContent = 'Downloaded!';
+        }
 
         setTimeout(() => {
             downloadBtn.innerHTML = originalContent;
@@ -742,7 +986,12 @@ function handleLogout() {
     sessionStorage.removeItem(ACCESS_GRANTED_SEEN_KEY);
     state.user = null;
     state.isAuthenticated = false;
+    state.activeConversationIdByMode = { general_chat: null, test_case: null };
+    state.conversationsByMode = { general_chat: [], test_case: [] };
+    state.downloadPayloads = {};
+    state.downloadPayloadCounter = 0;
     clearMessagesAndResetWelcome();
+    renderConversationLists();
     updateUIForGuest();
 }
 
@@ -765,7 +1014,9 @@ function updateUIForUser(user) {
     }
 
     if (!user.is_premium && state.currentMode === 'test_case') {
-        switchMode('general_chat');
+        switchMode('general_chat').catch((error) => {
+            console.error('Failed to switch mode for non-premium user:', error);
+        });
     }
 }
 
@@ -779,7 +1030,9 @@ function updateUIForGuest() {
     }
 
     if (state.currentMode === 'test_case') {
-        switchMode('general_chat');
+        switchMode('general_chat').catch((error) => {
+            console.error('Failed to switch mode for guest:', error);
+        });
     }
 }
 
