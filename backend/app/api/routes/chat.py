@@ -24,7 +24,10 @@ AEROSPACE_KEYWORDS = {
     "airspeed", "altitude", "avionics", "blade", "boeing", "cabin", "cockpit", "compressor",
     "drag", "engine", "faa", "fuselage", "gear", "helicopter", "hydraulic", "icao", "jet",
     "landing", "lift", "mach", "missile", "nacelle", "propeller", "propulsion", "radar",
-    "runway", "sae", "stability", "stall", "thrust", "turbine", "uav", "wing"
+    "runway", "sae", "stability", "stall", "thrust", "turbine", "uav", "wing",
+    "takeoff", "take off", "preflight", "pre flight", "checklist", "pre takeoff",
+    "taxi", "rotation", "climb", "approach", "departure", "atc", "pilot", "flight",
+    "v1", "vr", "v2", "walkaround", "run up", "before takeoff"
 }
 
 OUT_OF_CONTEXT_REPLY = (
@@ -33,6 +36,11 @@ OUT_OF_CONTEXT_REPLY = (
 
 GREETING_WORDS = {
     "hi", "hello", "hey", "hiya", "greetings", "hola", "yo", "sup"
+}
+
+GREETING_FILLER_WORDS = {
+    "there", "airbot", "bot", "team", "all", "everyone", "folks", "friend", "sir",
+    "madam", "again", "dear", "please"
 }
 
 GREETING_PHRASES = {
@@ -71,7 +79,17 @@ FAREWELL_REPLY = (
 
 def is_aerospace_related(question: str) -> bool:
     normalized = question.lower().replace("-", " ").replace("/", " ")
-    return any(keyword in normalized for keyword in AEROSPACE_KEYWORDS)
+    if any(keyword in normalized for keyword in AEROSPACE_KEYWORDS):
+        return True
+
+    aerospace_intent_patterns = [
+        r"\bbefore\s+take\s*off\b",
+        r"\bpre\s*take\s*off\b",
+        r"\bpreflight\b",
+        r"\b(checklist|checks|steps?)\b.*\b(take\s*off|taxi|landing|flight)\b",
+        r"\b(take\s*off|landing)\b.*\b(checklist|checks|steps?)\b",
+    ]
+    return any(re.search(pattern, normalized) for pattern in aerospace_intent_patterns)
 
 
 def is_greeting_message(question: str) -> bool:
@@ -83,11 +101,23 @@ def is_greeting_message(question: str) -> bool:
     if normalized in GREETING_PHRASES:
         return True
 
+    for phrase in GREETING_PHRASES:
+        if normalized.startswith(f"{phrase} "):
+            return True
+
     words = [word for word in normalized.split() if word]
-    if not words or len(words) > 4:
+    if not words or len(words) > 6:
         return False
 
-    return all(word in GREETING_WORDS for word in words)
+    if all(word in GREETING_WORDS for word in words):
+        return True
+
+    if words[0] in GREETING_WORDS and all(
+        word in GREETING_WORDS or word in GREETING_FILLER_WORDS for word in words[1:]
+    ):
+        return True
+
+    return False
 
 
 def is_farewell_message(question: str) -> bool:
