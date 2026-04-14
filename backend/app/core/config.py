@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     MONGO_URI: str = "mongodb://localhost:27017"
     SQLITE_DB_PATH: str = "./airbot.db"
+    RAG_CACHE_DIR: str = "./cache"
+    RAG_CACHE_ENABLED: bool = True
+    RAG_REQUIRE_PREBUILT: bool = False
 
     class Config:
         env_file = ".env"
