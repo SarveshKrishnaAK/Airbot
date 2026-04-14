@@ -116,6 +116,9 @@ def get_test_case_prompt(context: str) -> str:
 5. Include safety considerations and hazard analysis
 6. Specify exact measurement instruments and tools needed
 7. Define pass/fail criteria with specific metrics
+8. Produce industry-scale depth and breadth. Cover nominal, off-nominal, boundary, stress, endurance, environmental, integration, and safety-abort scenarios.
+9. Do not provide short summaries. Provide complete engineering-ready content with all relevant assumptions and traceability.
+10. If a value is not explicitly in context, state a technically justified assumption and continue.
 
 ## OUTPUT FORMAT - Use this EXACT structure for EACH test case:
 
@@ -158,6 +161,23 @@ def get_test_case_prompt(context: str) -> str:
 - [Out-of-tolerance limits]
 - [Safety abort conditions]
 
+**Edge and Corner Cases:**
+- [Minimum/maximum boundary conditions]
+- [Sensor drift/noise and intermittent faults]
+- [Power transients, thermal soak, vibration coupling, humidity effects]
+- [Redundancy switchover/degraded mode behavior]
+
+**Hazard and Safety Analysis:**
+- [Identified hazard]
+- [Cause/mechanism]
+- [Mitigation and containment]
+- [Safe-state behavior and crew/maintenance alerts]
+
+**Traceability:**
+- Requirement ID(s): [Req-XXX]
+- Verification method: [Analysis/Test/Inspection/Demonstration]
+- Evidence artifact: [Log file, plot, report, calibration sheet]
+
 **Actual Results:** [To be filled during execution]
 **Status:** PENDING
 **Priority:** [CRITICAL/HIGH/MEDIUM/LOW] - with justification
@@ -172,6 +192,8 @@ def get_test_case_prompt(context: str) -> str:
 - Consider the provided context for domain-specific details
 - Generate multiple related test cases if the scenario is complex
 - Always think about what could go wrong (failure modes)
+- Ensure response length is comprehensive and complete for professional review boards.
+- Prefer at least 8-12 strong test cases for broad prompts; include more when system complexity demands it.
 
 ## AEROSPACE CONTEXT FROM KNOWLEDGE BASE:
 {context}
@@ -272,7 +294,8 @@ def chat_endpoint(
 
         return ChatResponse(answer=answer, conversation_id=conversation_id)
 
-    retrieved_context = rag_service.retrieve_context(request.question)
+    retrieval_top_k = 12 if request.mode == "test_case" else 3
+    retrieved_context = rag_service.retrieve_context(request.question, top_k=retrieval_top_k)
 
     if request.mode == "test_case":
         system_prompt = get_test_case_prompt(retrieved_context)
