@@ -6,8 +6,12 @@ from contextlib import asynccontextmanager
 from app.api.routes import chat, aerospace, health, download, auth
 from app.db.vector_store import vector_store
 from app.db.persistence import initialize_database
-from app.utils.pdf_loader import load_documents
 from app.core.config import settings
+from app.utils.rag_cache import (
+    resolve_knowledge_base_path,
+    get_knowledge_base_signature,
+    prepare_chunked_documents,
+)
 import os
 
 
@@ -15,40 +19,37 @@ import os
 async def lifespan(app: FastAPI):
     initialize_database()
 
-    knowledge_base_candidates = [
-        os.getenv("KNOWLEDGE_BASE_DIR", ""),
-        "/app/knowledge_base",
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base")),
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../knowledge_base")),
-    ]
-    filtered_candidates = [path for path in knowledge_base_candidates if path]
-    base_path = next((path for path in filtered_candidates if os.path.exists(path)), filtered_candidates[0])
+    base_path = resolve_knowledge_base_path()
     print("Knowledge base path:", base_path)
     print(f"LLM Provider: {settings.LLM_PROVIDER}")
 
-    from app.utils.chunker import chunk_text
+    cache_signature = get_knowledge_base_signature(base_path)
+    cache_dir = os.path.abspath(settings.RAG_CACHE_DIR)
+    cache_loaded = False
 
-    raw_documents = load_documents(base_path)
-    print(f"Knowledge base documents loaded: {len(raw_documents)}")
-
-    if not raw_documents:
-        file_count = 0
-        for _, _, files in os.walk(base_path):
-            file_count += len(files)
-        print(f"Knowledge base files discovered: {file_count}")
-
-    documents = []
-    for doc in raw_documents:
-        chunks = chunk_text(doc)
-        documents.extend(chunks)
-
-    if documents:
+    if settings.RAG_CACHE_ENABLED:
         try:
-            vector_store.build_index(documents)
+            cache_loaded = vector_store.load_cache(cache_dir, cache_signature)
         except Exception as error:
-            print(f"⚠ Vector index build failed. Continuing without RAG index: {error}")
+            print(f"⚠ RAG cache load failed. Rebuilding index: {error}")
+
+    if not cache_loaded:
+        documents = []
+        if settings.RAG_REQUIRE_PREBUILT:
+            print("⚠ RAG cache missing or stale and RAG_REQUIRE_PREBUILT=true. Skipping index rebuild.")
+        else:
+            documents = prepare_chunked_documents(base_path)
+        if documents:
+            try:
+                vector_store.build_index(documents)
+                if settings.RAG_CACHE_ENABLED:
+                    vector_store.save_cache(cache_dir, cache_signature)
+            except Exception as error:
+                print(f"⚠ Vector index build failed. Continuing without RAG index: {error}")
+        else:
+            print("⚠ No documents found in knowledge base.")
     else:
-        print("⚠ No documents found in knowledge base.")
+        print(f"RAG cache hit. Loaded {len(vector_store.documents)} chunks.")
 
     yield
 
