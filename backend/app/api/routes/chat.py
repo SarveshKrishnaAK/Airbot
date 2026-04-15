@@ -258,6 +258,7 @@ def chat_endpoint(
 
     token_data = None
     conversation_id = request.conversation_id
+    user_message_saved = False
 
     if credentials is not None:
         token_data = auth_service.verify_token(credentials.credentials)
@@ -294,12 +295,15 @@ def chat_endpoint(
         else:
             conversation_id = create_conversation(token_data.email, request.mode, request.question)
 
+        # Persist the user prompt before generating a response to keep chat turns aligned.
+        add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+        user_message_saved = True
+
     if request.mode == "general_chat" and is_greeting_message(request.question):
         answer = GREETING_REPLY
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
             add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
         return ChatResponse(answer=answer, conversation_id=conversation_id)
@@ -309,7 +313,6 @@ def chat_endpoint(
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
             add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
         return ChatResponse(answer=answer, conversation_id=conversation_id)
@@ -319,7 +322,6 @@ def chat_endpoint(
 
         if token_data and token_data.email:
             update_user_preferred_mode(token_data.email, request.mode)
-            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
             add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
         return ChatResponse(answer=answer, conversation_id=conversation_id)
@@ -340,7 +342,8 @@ def chat_endpoint(
 
     if token_data and token_data.email:
         update_user_preferred_mode(token_data.email, request.mode)
-        add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
+        if not user_message_saved:
+            add_chat_message(token_data.email, "user", request.mode, request.question, conversation_id=conversation_id)
         add_chat_message(token_data.email, "assistant", request.mode, answer, conversation_id=conversation_id)
 
     return ChatResponse(answer=answer, conversation_id=conversation_id)
