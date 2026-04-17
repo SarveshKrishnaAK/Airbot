@@ -149,6 +149,23 @@ def get_test_case_prompt(context: str) -> str:
 8. Produce industry-scale depth and breadth. Cover nominal, off-nominal, boundary, stress, endurance, environmental, integration, and safety-abort scenarios.
 9. Do not provide short summaries. Provide complete engineering-ready content with all relevant assumptions and traceability.
 10. If a value is not explicitly in context, state a technically justified assumption and continue.
+11. The response must be deeply elaborated and technically rich; prioritize minute engineering detail over brevity.
+12. For each test case section below, include explicit rationale, constraints, and contextual aerospace considerations tied to real operating conditions.
+13. Use realistic, high-fidelity parameters (units, ranges, calibration references, sampling rates, timing windows, environmental envelopes, and acceptance margins).
+
+## MANDATORY DEPTH REQUIREMENTS PER TEST CASE:
+- Description: minimum 180 words; include operational context, mission phase, failure impact, and why this verification is safety/airworthiness-relevant.
+- Preconditions: minimum 12 bullet points with detailed initial states, software/hardware versions, environmental setup, safety interlocks, calibration statuses, and configuration baselines.
+- Test Equipment Required: minimum 10 bullet points, each with model/type, measurement range, accuracy/resolution, calibration interval, and intended use in the procedure.
+- Test Steps: minimum 20 numbered steps with exact actions, command values, wait/stabilization timing, data logging points, checkpoints, contingency actions, and stop/abort logic.
+- Expected Results: minimum 10 bullet points, each measurable with explicit units, thresholds/tolerances, timing limits, and expected trend/behavior.
+- Failure Criteria: minimum 10 bullet points, including hard fail thresholds, warning/degraded conditions, anomaly signatures, intermittent fault triggers, and immediate safety-abort conditions.
+
+## STRICT QUALITY BAR:
+- Avoid vague phrases such as "works correctly", "acceptable", or "as expected" without quantified metrics.
+- Every critical assertion must be testable and measurable.
+- Tie each major requirement to aerospace engineering reasoning, operational risk, and verification intent.
+- Prefer richer depth even if response is long.
 
 ## OUTPUT FORMAT - Use this EXACT structure for EACH test case:
 
